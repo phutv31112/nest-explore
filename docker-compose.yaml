@@ -1,0 +1,15 @@
+version: '3.8'
+services:
+  dev-database:
+    image: postgres
+    container_name: explore-database
+    ports:
+      - 5436:5432
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 12345
+      POSTGRES_DB: exploredb
+    networks:
+      - nestjs-network
+networks:
+  nestjs-network:
