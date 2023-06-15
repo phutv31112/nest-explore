@@ -1,26 +1,30 @@
 import {
   BadRequestException,
   ForbiddenException,
+  Inject,
   Injectable,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { RegisterDto } from '../dto/register.dto';
 import { PrismaService } from '../prisma/prisma.service';
-import { JwtService } from '@nestjs/jwt';
 import * as agon from 'argon2';
 import * as randomatic from 'randomatic';
 import * as bcrypt from 'bcryptjs';
 import { LoginDto } from '../dto/login.dto';
 import { RefreshTokenService } from '../refresh-token/refresh-token.service';
 import { JwtStrategy } from '../strategy/jwt-strategy';
+import { MailerService } from 'src/mailer/mailer.service';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly jwtService: JwtService,
     private readonly refreshTokenService: RefreshTokenService,
+    private mailerService: MailerService,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
   async register(body: RegisterDto) {
     const passwordRegex =
@@ -81,6 +85,26 @@ export class AuthService {
       throw new BadRequestException('Invalid password!');
     }
     delete user.hashedPassword;
+    const otp = randomatic('0', 8);
+    await this.cacheManager.set('otp', otp, 600);
+    await this.cacheManager.set('email', user.email, 900);
+    await this.mailerService.sendEmail(user.email, otp);
+    return {
+      message: 'Send otp successfully!',
+    };
+    // return this.signJwtToken(user.id, user.email, user.roles, user.secret);
+  }
+  async loginTwoFactor(otp: string) {
+    console.log('otp-factor:', otp);
+    console.log('email-factor:', await this.cacheManager.get('email'));
+    if (!(await this.cacheManager.get('email'))) {
+      throw new NotFoundException('Otp is invalid! Please try again.');
+    }
+    const user = await this.prisma.user.findUnique({
+      where: {
+        email: await this.cacheManager.get('email'),
+      },
+    });
     return this.signJwtToken(user.id, user.email, user.roles, user.secret);
   }
   async loginWithGoogle(email: string) {

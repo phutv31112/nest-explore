@@ -80,4 +80,8 @@ export class AuthController {
     //   'https://www.youtube.com/watch?v=Qmv3mIR_FdE&ab_channel=JayantPatilTech',
     // );
   }
+  @Post('login/otp')
+  async loginTwoFactor(@Body('otp') otp: string) {
+    return this.authService.loginTwoFactor(otp);
+  }
 }

@@ -16,17 +16,17 @@ export class MailerService {
       },
     });
   }
-  async sendResetEmail(email: string, resetToken: string): Promise<void> {
+  async sendEmail(email: string, message: string): Promise<void> {
     const mailOptions = {
       from: this.configService.get('HOST_MAILTRAP'),
       to: email,
-      subject: resetToken,
-      text: `Reset token: ${resetToken}`,
+      subject: message,
+      text: `message: ${message}`,
     };
 
     try {
       await this.transporter.sendMail(mailOptions);
-      console.log('Reset email sent successfully');
+      console.log('Send email successfully!');
     } catch (error) {
       console.error('Error sending reset email', error);
     }

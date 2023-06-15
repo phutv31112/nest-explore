@@ -25,7 +25,7 @@ export class PasswordResetService {
       throw new ForbiddenException('User is not found');
     }
     const resetToken = this.generateRandomToken();
-    await this.mailerService.sendResetEmail(email, resetToken);
+    await this.mailerService.sendEmail(email, resetToken);
     // await this.rediService.getClient().set(`reset_token:${email}`, resetToken);
     await this.cacheManager.set(email, resetToken, 600);
     const value = await this.cacheManager.get(email);
