@@ -8,11 +8,10 @@ import {
 } from '@nestjs/common';
 import { RegisterDto } from '../dto/register.dto';
 import { PrismaService } from '../prisma/prisma.service';
-import * as agon from 'argon2';
 import * as randomatic from 'randomatic';
 import * as bcrypt from 'bcryptjs';
 import { LoginDto } from '../dto/login.dto';
-import { RefreshTokenService } from '../refresh-token/refresh-token.service';
+import { RefreshTokenService } from './refresh-token/refresh-token.service';
 import { JwtStrategy } from '../strategy/jwt-strategy';
 import { MailerService } from 'src/mailer/mailer.service';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
@@ -27,15 +26,14 @@ export class AuthService {
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
   async register(body: RegisterDto) {
-    const passwordRegex =
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*])[a-zA-Z!@#$%^&*]{8,}$/;
+    const passwordRegex = /^(?=.*[!@#$%^&*])(?=.*[a-z])(?=.*[A-Z]).{8,}$/;
     if (!passwordRegex.test(body.password)) {
       throw new UnauthorizedException(
         'password must include both uppercase and lowercase characters and special characters',
       );
     }
-    // const salt = bcrypt.genSaltSync(10);
-    const hashedPassword = await agon.hash(body.password);
+    const salt = await bcrypt.genSaltSync(10);
+    const hashedPassword = await bcrypt.hashSync(body.password, salt);
     const secret = randomatic('Aa0', 24);
     try {
       const user = await this.prisma.user.create({
@@ -44,8 +42,6 @@ export class AuthService {
           hashedPassword,
           roles: body.roles,
           secret,
-          firstName: '',
-          lastName: '',
         },
         select: {
           id: true,
@@ -56,6 +52,7 @@ export class AuthService {
       });
       const refreshToken = this.refreshTokenService.generateRefreshToken(
         user.id,
+        secret,
       );
       return {
         message: 'Register successfully!',
@@ -63,9 +60,7 @@ export class AuthService {
         refreshToken: refreshToken,
       };
     } catch (error) {
-      if (error.code === 'P2002') {
-        throw new ForbiddenException('User with this email is already exist!');
-      }
+      return error.message;
     }
   }
   async login(body: LoginDto) {
@@ -77,22 +72,22 @@ export class AuthService {
     if (!user) {
       throw new NotFoundException('User not found!');
     }
-    const passwordMatched = await agon.verify(
-      user.hashedPassword,
+    const passwordMatched = await bcrypt.compareSync(
       body.password,
+      user.hashedPassword,
     );
     if (!passwordMatched) {
       throw new BadRequestException('Invalid password!');
     }
     delete user.hashedPassword;
-    const otp = randomatic('0', 8);
-    await this.cacheManager.set('otp', otp, 600);
-    await this.cacheManager.set('email', user.email, 900);
-    await this.mailerService.sendEmail(user.email, otp);
-    return {
-      message: 'Send otp successfully!',
-    };
-    // return this.signJwtToken(user.id, user.email, user.roles, user.secret);
+    // const otp = randomatic('0', 8);
+    // await this.cacheManager.set('otp', otp, 600);
+    // await this.cacheManager.set('email', user.email, 900);
+    // await this.mailerService.sendEmail(user.email, otp);
+    // return {
+    //   message: 'Send otp successfully!',
+    // };
+    return this.signJwtToken(user.id, user.email, user.roles, user.secret);
   }
   async loginTwoFactor(otp: string) {
     console.log('otp-factor:', otp);

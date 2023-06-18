@@ -11,32 +11,64 @@ datasource db {
 }
 
 model User {
-  id    Int     @default(autoincrement()) @id
-  email String  @unique
-  hashedPassword String?
-  firstName  String?
-  lastName String?
-  secret   String  @default("secret")
-  roles    String   @default("user")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  notes   Note[]
+  id             Int            @id @default(autoincrement())
+  email          String         @unique
+  hashedPassword String
+  firstName      String?
+  lastName       String?
+  secret         String         @default("secret")
+  roles          String         @default("user")
+  salt           String?        
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
   refreshTokens  RefreshToken[]
+  comments       Comment[]      @relation("UserCmt")
+  rates          Rate[]         @relation("UserRate")
+  products       Product[]
 }
 
-model Note {
-  id        Int      @default(autoincrement()) @id
-  title     String
-  description   String
-  url String
+model Product {
+  id          Int       @id @default(autoincrement())
+  name        String
+  description String
+  price       Decimal?
+  image       String
+  category    String
+  rating      Float?
+  rates       Rate[]    @relation("ProductRate")
+  comments    Comment[] @relation("ProductCmt")
+  users       User[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Comment {
+  ordinalNumber        Int      @unique  @default(autoincrement())
+  content   String
+  user      User     @relation("UserCmt", fields: [userId], references: [id])
+  userId    Int
+  product   Product  @relation("ProductCmt", fields: [productId], references: [id])
+  productId Int
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  user      User     @relation(fields: [userId], references: [id])
+  @@id([ordinalNumber])
+}
+
+model Rate {
+  id        Int      @unique  @default(autoincrement())
+  rating    Int
+  user      User     @relation("UserRate", fields: [userId], references: [id])
   userId    Int
+  product   Product  @relation("ProductRate", fields: [productId], references: [id])
+  productId Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@id([userId, productId])
 }
 
 model RefreshToken {
-  id        Int      @default(autoincrement()) @id
+  id        Int      @id @default(autoincrement())
   token     String   @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

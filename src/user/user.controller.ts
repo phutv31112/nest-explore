@@ -5,7 +5,7 @@ import { Role } from '../enum/role.enum';
 import { Request } from 'express';
 import { UserService } from './user.service';
 import { ChangePassDto } from '../dto/change-pass.dto';
-import { UserId } from 'src/decorator/user.decorator';
+import { User } from 'src/decorator/user.decorator';
 
 @Controller('users')
 export class UserController {
@@ -13,9 +13,9 @@ export class UserController {
   @UseGuards(JwtAuthGuard)
   @Roles(Role.User)
   @Get('detail')
-  getUserDetail(@UserId() userId) {
-    console.log('user:', userId);
-    return userId;
+  getUserDetail(@User() user) {
+    console.log('user:', user);
+    return user;
   }
   @Roles(Role.Admin)
   @Get('all-users')

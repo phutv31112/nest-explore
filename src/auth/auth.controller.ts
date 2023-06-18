@@ -1,4 +1,3 @@
-import { IsEmail } from 'class-validator';
 import { PasswordResetService } from './../password.reset/password.reset.service';
 import {
   Body,
@@ -12,7 +11,7 @@ import {
 import { AuthService } from './auth.service';
 import { RegisterDto } from '../dto/register.dto';
 import { LoginDto } from '../dto/login.dto';
-import { RefreshTokenService } from '../refresh-token/refresh-token.service';
+import { RefreshTokenService } from './refresh-token/refresh-token.service';
 import { Request, Response } from 'express';
 import { AuthGuard } from '@nestjs/passport';
 
@@ -32,22 +31,9 @@ export class AuthController {
     return this.authService.login(body);
   }
   @Post('refresh-token')
-  async refresh(@Req() req: Request, @Res() res: Response): Promise<Response> {
+  async refresh(@Req() req: Request, @Res() res: Response) {
     const { refreshToken } = req.body;
-    if (!refreshToken) {
-      return res.status(400).json({ message: 'Refresh token is require!' });
-    }
-    const isValid = await this.refreshTokenService.validateRefreshToken(
-      refreshToken,
-    );
-    if (!isValid) {
-      return res.status(400).json({ message: ' Invalid refresh token' });
-    }
-    const newAccessToken = await this.refreshTokenService.refreshAccessToken(
-      refreshToken,
-    );
-    console.log('Access-controller:', newAccessToken);
-    return res.json({ new_accessToken: newAccessToken });
+    console.log('refresh token:', refreshToken);
   }
   @Post('forgot-password')
   async generateResetToken(@Body('email') email: string): Promise<string> {

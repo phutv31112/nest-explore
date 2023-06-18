@@ -26,10 +26,11 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     const email = profile.emails[0].value;
     const user = await this.prisma.user.findUnique({ where: { email } });
     const password = randomatic('Aa0!', 8);
+    const salt = 'absdf';
     if (!user) {
       // Tạo người dùng mới trong cơ sở dữ liệu
       const newUser = await this.prisma.user.create({
-        data: { email, hashedPassword: password },
+        data: { email, hashedPassword: password, salt },
       });
       return done(null, newUser);
     }

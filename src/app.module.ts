@@ -10,6 +10,9 @@ import { MailerModule } from './mailer/mailer.module';
 import { CacheModule } from '@nestjs/cache-manager';
 import { GoogleStrategy } from './strategy/google.strategy';
 import { QrCodeModule } from './qr-code/qr-code.module';
+import { ProductModule } from './product/product.module';
+import { CommentModule } from './comment/comment.module';
+import { RateModule } from './rate/rate.module';
 
 @Module({
   imports: [
@@ -20,6 +23,9 @@ import { QrCodeModule } from './qr-code/qr-code.module';
     MailerModule,
     CacheModule.register(),
     QrCodeModule,
+    ProductModule,
+    CommentModule,
+    RateModule,
   ],
   providers: [JwtStrategy, PasswordResetService, GoogleStrategy],
 })

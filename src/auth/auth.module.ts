@@ -5,21 +5,23 @@ import { PrismaModule } from '../prisma/prisma.module';
 import { JwtModule } from '@nestjs/jwt';
 import { jwtConstants } from '../constant/constants';
 import { JwtStrategy } from '../strategy';
-import { RefreshTokenService } from '../refresh-token/refresh-token.service';
+import { RefreshTokenService } from './refresh-token/refresh-token.service';
 import { APP_GUARD } from '@nestjs/core';
 import { RolesGuard } from '../guard/roles.guard';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { RedisModule } from 'nestjs-redis';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { PasswordResetService } from '../password.reset/password.reset.service';
-import { MailerService } from 'src/mailer/mailer.service';
+import { MailerService } from '../mailer/mailer.service';
 import { CacheModule } from '@nestjs/cache-manager';
-import { GoogleStrategy } from 'src/strategy/google.strategy';
+import { GoogleStrategy } from '../strategy/google.strategy';
 import { PassportModule } from '@nestjs/passport';
+import { CommentModule } from '../comment/comment.module';
 
 @Module({
   imports: [
     PrismaModule,
+    CommentModule,
     MailerModule,
     ConfigModule,
     CacheModule.register(),
