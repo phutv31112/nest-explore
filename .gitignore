@@ -36,3 +36,4 @@ lerna-debug.log*
 
 .env
 /constant/constants.ts
+.env.config
